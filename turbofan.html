@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <link rel="stylesheet" type="text/css" href="/turbofan.css">
+        <script src="https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js"></script>
+    </head>
+    <body>
+        <div>
+            <div id="turbofan-project-title">
+                Turbofan
+            </div>
+            <div>
+                ME484 Project
+            </div>
+        </div>
+
+        <div>
+            Turbofan Configurations
+        </div>
+        <div>
+            Efficiencies
+        </div>
+        <div class=efficiencies>
+            <span> Component </span>
+            <div> η </div>
+            <div> γ </div>
+
+            <span> Diffuser </span>
+            <input id="diffuser-efficiency" type="text" value="0.97" />
+            <input id="diffuser-gamma" type="text" value="1.40" />
+
+            <span> Fan </span>
+            <input id="fan-efficiency" type="text" value="0.85" />
+            <input id="fan-gamma" type="text" value="1.40" />
+
+            <span> Fan Nozzle </span>
+            <input id="fan-nozzle-efficiency" type="text" value="0.97" />
+            <input id="fan-nozzle-gamma" type="text" value="1.40" />
+
+            <span> Compressor </span>
+            <input id="compressor-efficiency" type="text" value="0.85" />
+            <input id="compressor-gamma" type="text" value="1.37" />
+
+            <span> Burner </span>
+            <input id="burner-efficiency" type="text" value="1.00" />
+            <input id="burner-gamma" type="text" value="1.35" />
+
+            <span> Turbine </span>
+            <input id="turbine-efficiency" type="text" value="0.90" />
+            <input id="turbine-gamma" type="text" value="1.33" />
+
+            <span> Nozzle </span>
+            <input id="nozzle-efficiency" type="text" value="0.98" />
+            <input id="nozzle-gamma" type="text" value="1.36" />
+        </div>
+
+        <div>
+            Efficiencies
+        </div>
+        <div>
+
+        </div>
+
+
+
+
+
+        <script type="text/javascript">
+
+            const output = document.getElementById("output");
+            const code = document.getElementById("code");
+
+            function addToOutput(s) {
+                output.value += ">>>" + code.value + "\n" + s + "\n";
+            }
+
+            output.value = "Initializing...\n";
+
+            async function main(){
+                let pyodide = await loadPyodide();
+                output.value += "Ready!\n";
+                return pyodide;
+            }
+            let pyodideReadyPromise = main();
+
+            async function evaluatePython() {
+                let pyodide = await pyodideReadyPromise;
+                try {
+                let output = pyodide.runPython(code.value);
+                addToOutput(output);
+                } catch (err) {
+                addToOutput(err);
+                }
+            }
+
+        </script>
+    </body>
+</html>

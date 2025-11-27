@@ -1,0 +1,19 @@
+.efficiencies {
+    display: inline-grid;                
+    grid-template-columns: max-content 5rem 5rem; 
+    column-gap: 0.5rem;
+    row-gap: 0.35rem;
+    justify-items: start;                 
+}
+
+.efficiencies span {
+    display: inline-block;
+    width: 8rem;
+    text-align: right;
+}
+
+.efficiencies input {
+    width: 5rem;                          
+    padding: 0.1rem 0.25rem;
+    box-sizing: border-box;
+}
