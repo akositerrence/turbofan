@@ -208,9 +208,9 @@ async function updateValues() {
         plot_bgcolor: "rgba(0,0,0,0)",
         scene: {
             bgcolor: "rgba(0,0,0,0)",
-            xaxis: { title: { text: "Bypass Ratio, β" } },
-            yaxis: { title: { text: "Compressor PR, Prc" } },
-            zaxis: { title: { text: "Fuel Consumption [kg/s]" } }
+            xaxis: { title: { text: "β" } },
+            yaxis: { title: { text: "P_rc" } },
+            zaxis: { title: { text: "m_f [kg/s]" } }
         },
         margin: { l: 60, r: 20, t: 50, b: 60 }
     };
