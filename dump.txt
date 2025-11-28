@@ -1,0 +1,10 @@
+<div class="">
+            <span> Flight Altitude [ft] </span>
+            <input id="flight-altitude" type="text" value="40000" />
+            <span> Flight Mach Number </span>
+            <input id="flight-altitude" type="text" value="0.85" />
+            <span> Speed of Sound [m/s] </span>
+            <input id="flight-altitude" type="text" value="0.85" />
+            <span> Flight Speed [m/s] </span>
+            <input id="flight-altitude" type="text" value="0.85" />
+        </div>
