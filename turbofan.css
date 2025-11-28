@@ -38,7 +38,7 @@ body {
     .container-b,
     .container-c {
         flex: 1 1 0;
-        max-width: none;
+        max-width: 33.33%;
         width: auto;
     }
 }
@@ -46,6 +46,13 @@ body {
 
 #turbofan-project-title {
     text-align: center;
+    padding-top: 0.5rem;
+    font-size: 1.5em;
+}
+
+#turbofan-project-title-name {
+    text-align: center;
+    padding-top: 0.25rem;
 }
 
 .input-space-container {
@@ -166,7 +173,7 @@ body {
 
 .engine-parameters-container-b {
     display: inline-grid;
-    grid-template-columns: max-content 4rem;
+    grid-template-columns: max-content 5rem;
     column-gap: 0.5rem;
     row-gap: 0.35rem;
     align-items: center;
@@ -174,4 +181,36 @@ body {
 
 .cycle-parameter {
     text-align: right;
+}
+
+.container-c {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.fuel-container {
+    display: inline-grid;
+    grid-template-columns: max-content 5rem;
+    column-gap: 0.5rem;
+    row-gap: 0.35rem;
+    align-items: center;
+}
+
+.fuel-parameter {
+    text-align: right;
+}
+
+#plot-container {
+    width: 80% !important;
+    border: 1px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#optimization-plot {
+    width: 90% !important;
 }

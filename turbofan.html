@@ -6,22 +6,23 @@
         <title>Document</title>
         <link rel="stylesheet" type="text/css" href="/turbofan.css">
         <script src="https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js"></script>
+        <script src="https://cdn.plot.ly/plotly-3.3.0.min.js" charset="utf-8"></script>
     </head>
     <body>
         <div class="main-container">
             <div class="container-a">
                 <div>
                     <div class="standard-text" id="turbofan-project-title">
-                        NDSU ME484 Aerospace Propulsion
+                        Turbofan Configuration
                     </div>
-                    <div class="standard-text" id="turbofan-project-title">
-                        Turbofan Configuration 
+                    <div class="standard-text" id="turbofan-project-title-name">
+                        ME484 - Aerospace Propulsion / Terrence Andre San Gabriel
                     </div>
                 </div>
 
                 <div class="standard-text input-space-container">
                     <div class="input-space-title">
-                        / Efficiencies /
+                        / Component Efficiencies /
                     </div>
                     <div class="efficiencies">
                         <span class="component-name"> Component </span>
@@ -94,7 +95,7 @@
                         <span class="internal-parameter"> Turbine Inlet Temperature, T<sub>04</sub> [K] </span>
                         <input class="input-field" id="turbine-inlet-temperature" type="text" value="1700" />
                         <span class="internal-parameter"> Heating Value of Fuel, Q<sub>R</sub> </span>
-                        <input class="input-field" id="fuel-heating-value" type="text" value="4.5E7" />
+                        <input class="input-field" id="fuel-heating-value" type="text" value="45000000" />
                     </div>
                 </div>
             </div>
@@ -148,15 +149,43 @@
                     <input class="output-field" id="u-ef" type="text" value="" readonly />
                     <span class="cycle-parameter"> Thrust/Air Mass Flux [N⋅s/kg] </span>
                     <input class="output-field" id="t-a-m-f" type="text" value="" readonly />
-                    <span class="cycle-parameter"> TSFC [kg/N⋅s] </span>
+                    <span class="cycle-parameter"> TSFC [kg/(N⋅s)] </span>
                     <input class="output-field" id="t-s-f-c" type="text" value="" readonly />
                 </div>
 
-                <button onclick="updateValues()">Evaluate Cycle from Configuration</button>
+                <button onclick="updateValues()">Evaluate Configuration</button>
 
             </div>
             <div class="container-c">
-                
+                <div class="input-space-title">
+                    / Overall Efficiencies /
+                </div>
+                <div class="fuel-container">
+                    <span class="fuel-parameter"> Thermal Efficiency, η<sub>th</sub> </span>
+                    <input class="output-field" id="thermal-efficiency" type="text" value="" readonly />
+                    <span class="fuel-parameter"> Propulsive Efficiency, η<sub>pr</sub>  </span>
+                    <input class="output-field" id="propulsive-efficiency" type="text" value="" readonly />
+                    <span class="fuel-parameter"> Overall Efficiency, η<sub>o</sub> </span>
+                    <input class="output-field" id="overall-efficiency" type="text" value="" readonly />
+                </div>
+                <div class="input-space-title">
+                    / Fuel Parameters /
+                </div>
+                <div class="fuel-container">
+                    <span class="fuel-parameter"> Thrust, 𝒯 [N] </span>
+                    <input class="input-field" id="thrust" type="text" value="444840" />
+                    <span class="fuel-parameter"> Mass Flux, ṁ<sub>a</sub> [kg/s] </span>
+                    <input class="output-field" id="mass-flux" type="text" value="" readonly />
+                    <span class="fuel-parameter"> Fuel Consumption, ṁ<sub>f</sub> [kg/s] </span>
+                    <input class="output-field" id="fuel-consumption" type="text" value="" readonly />
+                </div>
+                <div class="input-space-title">
+                    / Optimization /
+                </div>
+                <div id="plot-container">
+                    <div id="optimization-plot" style="background: transparent;"></div>
+                </div>
+
             </div>
         </div>
         <script src="turbofan.js"></script>

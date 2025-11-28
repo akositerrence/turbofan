@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 ### THERMODYNAMIC CONSTANTS ###
 r = 287.052874
@@ -83,19 +84,111 @@ def ambient(f_alt):
     h = f_alt*0.3048 # FT to M
     if h < 11000: # TROPOSPHERE
         tempa = 15.04 - 0.00649*h
-        press = (101.29 * (((tempa+273.1)/288.08)**5.256))*1000
+        press = (101.29 * (((tempa+273.1)/288.08)**5.256))*1000.0
     elif h < 25000: # LOWER STRATOSPHERE
         tempa = -56.46
-        press = (22.65 * math.exp(1.73-0.000157*h))*1000
+        press = (22.65 * math.exp(1.73-0.000157*h))*1000.0
     else: # SHOULD BE H < 25000
-        tempa = 131.21 + 0.00299*h
-        press = (2.488 * (((tempa+273.1)/216.6)**(-11.388)))*1000
+        tempa = -131.21 + 0.00299*h
+        press = (2.488 * (((tempa+273.1)/216.6)**(-11.388)))*1000.0
     
-    density = press / (0.2869 * (tempa+273.1))
+    density = (press/1000.0) / (0.2869 * (tempa+273.1))
     tempa_k = tempa + 273.15
     
     return tempa_k, press, density
 
+### MASS FLUX ###
+def mass_flux(thrust_air_mass_flux, thrust_specific_fuel_consumption, thrust):
+    air_mass_flux = (1.0/thrust_air_mass_flux) * thrust
+    fuel_consumption_flux = thrust_specific_fuel_consumption * thrust
+    return air_mass_flux, fuel_consumption_flux
+
+### OPTIMIZATION ###
+def optimize(c_p_diffuser,
+        c_p_fan,
+        c_p_compressor,
+        c_p_burner,
+        c_p_turbine,
+        c_p_nozzle,
+        c_p_fan_nozzle,
+        
+        efficiency_diffuser,
+        efficiency_fan,
+        efficiency_compressor,
+        efficiency_burner,
+        efficiency_turbine,
+        efficiency_nozzle,
+        efficiency_fan_nozzle,
+        
+        gamma_diffuser,
+        gamma_fan,
+        gamma_compressor,
+        gamma_burner,
+        gamma_turbine,
+        gamma_nozzle,
+        gamma_fan_nozzle,
+        
+        flight_altitude,
+        flight_mach_number,
+        
+        bypass_ratio,
+        fan_pressure_ratio,
+        compressor_pressure_ratio,
+        burner_pressure_ratio,
+        turbine_max_temp,
+        fuel_heating_value,
+        
+        thrust):
+    
+    beta_values = beta_values = np.arange(2, 10.5, 0.5) 
+    prc_values = np.arange(10,61, 1) 
+    
+    X, Y = np.meshgrid(beta_values, prc_values)
+    Z = np.zeros_like(X, dtype=float)
+    for i, prc in enumerate(prc_values):
+        for j, beta in enumerate(beta_values):
+            *_, air_mass_flux, fuel_consumption_flux = evaluate_cycle(
+                c_p_diffuser,
+                c_p_fan,
+                c_p_compressor,
+                c_p_burner,
+                c_p_turbine,
+                c_p_nozzle,
+                c_p_fan_nozzle,
+                
+                efficiency_diffuser,
+                efficiency_fan,
+                efficiency_compressor,
+                efficiency_burner,
+                efficiency_turbine,
+                efficiency_nozzle,
+                efficiency_fan_nozzle,
+                
+                gamma_diffuser,
+                gamma_fan,
+                gamma_compressor,
+                gamma_burner,
+                gamma_turbine,
+                gamma_nozzle,
+                gamma_fan_nozzle,
+                
+                flight_altitude,
+                flight_mach_number,
+                
+                beta,
+                fan_pressure_ratio,
+                prc,                 
+                burner_pressure_ratio,
+                turbine_max_temp,
+                fuel_heating_value,
+                thrust
+            )
+
+            Z[i, j] = fuel_consumption_flux
+    
+    return beta_values.tolist(), prc_values.tolist(), Z.tolist()
+
+### EVALUATION ###
 def evaluate_cycle(
     c_p_diffuser,
     c_p_fan,
@@ -129,7 +222,9 @@ def evaluate_cycle(
     compressor_pressure_ratio,
     burner_pressure_ratio,
     turbine_max_temp,
-    fuel_heating_value
+    fuel_heating_value,
+    
+    thrust_engine
 ):
     global temperature_04
     temperature_04 = turbine_max_temp
@@ -157,6 +252,8 @@ def evaluate_cycle(
     ### EFFICIENCIES ###
     efficiency_thermal, efficiency_propulsive, efficiency_overall = efficiencies(fuel_heating_value, bypass_ratio, fuel_to_air_ratio, thrust_air_max_flux, core_exit_exhaust_velocity, fan_exit_exhaust_velocity, flight_speed)
     
+    air_mass_flux, fuel_consumption_flux = mass_flux(thrust_air_max_flux, thrust_specific_fuel_consumption, thrust_engine)
+    
     return c_p_diffuser, c_p_fan, c_p_compressor, c_p_burner, \
         c_p_turbine, c_p_nozzle, c_p_fan_nozzle, \
         speed_of_sound, flight_speed, \
@@ -166,10 +263,11 @@ def evaluate_cycle(
         temperature_04, pressure_04, \
         temperature_05, pressure_05, \
         temperature_08, pressure_08, \
-        fuel_to_air_ratio, core_exit_exhaust_velocity, fan_exit_exhaust_velocity, thrust_air_max_flux, thrust_specific_fuel_consumption
+        fuel_to_air_ratio, core_exit_exhaust_velocity, fan_exit_exhaust_velocity, thrust_air_max_flux, thrust_specific_fuel_consumption, \
+        efficiency_thermal, efficiency_propulsive, efficiency_overall, \
+        air_mass_flux, fuel_consumption_flux
         
-        
-def update_values(ef_d, g_d, ef_f, g_f, ef_fn, g_fn, ef_c, g_c, ef_b, g_b, ef_t, g_t, ef_n, g_n, flg_alt, flg_ma, b_r, fpr, cpr, bpr, tmt, qr):
+def update_values(ef_d, g_d, ef_f, g_f, ef_fn, g_fn, ef_c, g_c, ef_b, g_b, ef_t, g_t, ef_n, g_n, flg_alt, flg_ma, b_r, fpr, cpr, bpr, tmt, q, thr):
     efficiency_diffuser = ef_d
     efficiency_fan = ef_f
     efficiency_compressor = ef_c
@@ -194,7 +292,9 @@ def update_values(ef_d, g_d, ef_f, g_f, ef_fn, g_fn, ef_c, g_c, ef_b, g_b, ef_t,
     compressor_pressure_ratio = cpr
     burner_pressure_ratio = bpr
     turbine_max_temp = tmt
-    fuel_heating_value = qr
+    fuel_heating_value = q
+    
+    thrust = thr
     
     c_p_diffuser = (gamma_diffuser*r)/(gamma_diffuser-1.0)
     c_p_fan = (gamma_fan*r)/(gamma_fan-1.0)
@@ -237,9 +337,47 @@ def update_values(ef_d, g_d, ef_f, g_f, ef_fn, g_fn, ef_c, g_c, ef_b, g_b, ef_t,
         compressor_pressure_ratio,
         burner_pressure_ratio,
         turbine_max_temp,
-        fuel_heating_value
+        fuel_heating_value,
+        
+        thrust
     )
     
-    return results
+    optimization = optimize(
+        c_p_diffuser,
+        c_p_fan,
+        c_p_compressor,
+        c_p_burner,
+        c_p_turbine,
+        c_p_nozzle,
+        c_p_fan_nozzle,
+        
+        efficiency_diffuser,
+        efficiency_fan,
+        efficiency_compressor,
+        efficiency_burner,
+        efficiency_turbine,
+        efficiency_nozzle,
+        efficiency_fan_nozzle,
+        
+        gamma_diffuser,
+        gamma_fan,
+        gamma_compressor,
+        gamma_burner,
+        gamma_turbine,
+        gamma_nozzle,
+        gamma_fan_nozzle,
+        
+        flight_altitude,
+        flight_mach_number,
+        
+        bypass_ratio,
+        fan_pressure_ratio,
+        compressor_pressure_ratio,
+        burner_pressure_ratio,
+        turbine_max_temp,
+        fuel_heating_value,
+        
+        thrust
+    )
     
-    
+    return results, optimization

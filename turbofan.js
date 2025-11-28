@@ -1,10 +1,12 @@
 async function main(){
     let pyodide = await loadPyodide();
-    const response = await fetch("turbofan.py")
+    const response = await fetch("turbofan.py");
+    await pyodide.loadPackage("numpy");
     const pythonCode = await response.text();
     await pyodide.runPythonAsync(pythonCode);
     return pyodide;
 }
+
 let pyodideReadyPromise = main();
 
 async function updateValues() {
@@ -101,13 +103,19 @@ async function updateValues() {
         document.getElementById("fuel-heating-value").value
     );
 
-    const result = pyodide.runPython(`update_values(${efficiency_diffuser}, ${gamma_diffuser}, ${efficiency_fan}, 
+    const thrust = parseFloat(
+        document.getElementById("thrust").value
+    );
+
+    const python_result = pyodide.runPython(`update_values(${efficiency_diffuser}, ${gamma_diffuser}, ${efficiency_fan}, 
         ${gamma_fan}, ${efficiency_fan_nozzle}, ${gamma_fan_nozzle}, ${efficiency_compressor}, ${gamma_compressor},
         ${efficiency_burner}, ${gamma_burner}, ${efficiency_turbine}, ${gamma_turbine}, ${efficiency_nozzle},
         ${gamma_nozzle}, ${flight_alt}, ${flight_mach}, ${bypass_ratio},  ${fan_pressure_ratio},  ${compressor_pressure_ratio},
-        ${burner_pressure_ratio}, ${turbine_max_temp}, ${fuel_heating_value})`);
+        ${burner_pressure_ratio}, ${turbine_max_temp}, ${fuel_heating_value}, ${thrust})`);
 
-    const values = result.toJs();
+    const [values, optimization] = python_result.toJs();
+    python_result.destroy();
+
     const [
         c_p_diffuser,
         c_p_fan,
@@ -134,7 +142,12 @@ async function updateValues() {
         u_e,
         u_ef,
         t_a_m_f,
-        t_s_f_c
+        t_s_f_c,
+        ef_th,
+        ef_pr,
+        ef_oa,
+        amf,
+        fcf
     ] = values;
 
     document.getElementById("diffuser-specific-heat").value = c_p_diffuser.toFixed(3);
@@ -167,9 +180,43 @@ async function updateValues() {
     document.getElementById("p-8").value = p_08.toFixed(1);
 
     document.getElementById("f-a-ratio").value = f_a_ratio.toFixed(5);
-    document.getElementById("u-e").value = u_e.toFixed(1);
-    document.getElementById("u-ef").value = u_ef.toFixed(1);
-    document.getElementById("t-a-m-f").value = t_a_m_f.toFixed(1);
+    document.getElementById("u-e").value = u_e.toFixed(2);
+    document.getElementById("u-ef").value = u_ef.toFixed(2);
+    document.getElementById("t-a-m-f").value = t_a_m_f.toFixed(2);
     document.getElementById("t-s-f-c").value = t_s_f_c.toFixed(5);
+
+    document.getElementById("thermal-efficiency").value = ef_th.toFixed(3);
+    document.getElementById("propulsive-efficiency").value = ef_pr.toFixed(3);
+    document.getElementById("overall-efficiency").value = ef_oa.toFixed(3);
+
+    document.getElementById("mass-flux").value = amf.toFixed(3);
+    document.getElementById("fuel-consumption").value = fcf.toFixed(3);
+
+    /* she optimize on my plot till i minimum */
+    const [beta_values, prc_values, fuel_values] = optimization;
+
+    const data = [{
+        x: beta_values,     
+        y: prc_values,    
+        z: fuel_values,        
+        type: "surface",
+    }];
+
+    const layout = {
+        title: { text: ""},
+        paper_bgcolor: "rgba(0,0,0,0)", 
+        plot_bgcolor: "rgba(0,0,0,0)",
+        scene: {
+            bgcolor: "rgba(0,0,0,0)",
+            xaxis: { title: { text: "Bypass Ratio, β" } },
+            yaxis: { title: { text: "Compressor PR, Prc" } },
+            zaxis: { title: { text: "Fuel Consumption [kg/s]" } }
+        },
+        margin: { l: 60, r: 20, t: 50, b: 60 }
+    };
+
+    layout.font = { size: 10 };
+
+    Plotly.newPlot("optimization-plot", data, layout, { responsive: true });
 
 }
